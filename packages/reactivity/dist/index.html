@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">1111</div>
+    <script type="module">
+      // 原生的
+      // import {reactive, effect} from '/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js'
+      // 自己的
+      import { reactive, effect, ref } from "./reactivity.js";
+      let obj = { name: "jw", age: 30, flag: true };
+      // const state1 = reactive(obj);
+      // const state2 = reactive(obj)
+      // const state3 = reactive(state1)
+      const state = reactive(obj);
+      // console.log(state)
+      // console.log(state.name , state.age)
+
+      // console.log(state1)
+      // console.log(state2)
+      // console.log(state2 === state1 )
+      // console.log( state1 === state3)
+      // let runner = effect(
+      //   () => {
+      //     console.log("is run");
+      //     app.innerHTML = state.flag
+      //       ? `姓名${state.name},`
+      //       : `年龄${state.age}`;
+      //   },
+      //   {
+      //     scheduler: () => {
+      //       console.log("数据更新了， 不重新书安然，走自己的逻辑");
+      //       runner();
+      //     },
+      //   }
+      // );
+      // effect(() =>{
+      //   app.innerHTML = `姓名${state.name},年龄${state.age}`
+      //   state.name = Math.random()
+      // })
+      // effect(() =>{
+      //   console.log(state.name)
+      //   effect(() =>{
+      //     console.log(state.name)
+      //   })
+      //   console.log(state.age)
+      // })
+
+      // setTimeout(() => {
+      //   state.flag = false;
+      // }, 1000);
+      // setTimeout(() => {
+      //   state.age++;
+      //   console.log(state);
+      // }, 1000);
+      // setTimeout(() =>{
+      //   state.age++
+      // },2000)
+      // setTimeout(() => {
+      //   state.flag = false;
+      //   setTimeout(() => {
+      //     console.log('这里不应搞执行')
+      //     state.name = "fffsfsdf";
+      //     state.age = 40
+      //   }, 2000);
+      // }, 1000);
+
+      // ref
+      const flag = ref(false);
+      console.log(flag);
+      effect(() => {
+        app.innerHTML =
+          flag.value ? `姓名${state.name}` : `年龄${state.age}`;
+      });
+      setTimeout(() => {
+        flag.value = true;
+      }, 1000);
+    </script>
+  </body>
+</html>

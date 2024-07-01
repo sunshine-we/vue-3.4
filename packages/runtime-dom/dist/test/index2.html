@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- <div id="parentElement">
+      <span id="childElement">foo bar</span>
+    </div> -->
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   // createRenderer,
+      //   // render,
+      //   h,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import { renderOptions, h, render } from "../runtime-dom.js";
+      // h(类型， 属性，儿子)
+      // h(类型，儿子)
+      // 1 两个参数 第二个参数可能是属性， 或者虚拟节点 __v_isVnode
+      // 2 第二个参数就是一个数组  -> 儿子
+      // 3 其他情况就是属性
+      // 4 直接传递非对象的文本
+      // 5 不能出现三个参数的时候第二只能是属性
+      // 6 如果超出三个参数，后面的都是儿子
+
+      // let ele1 = h(
+      //   "h1",
+      //   {
+      //     style: { color: "red" },
+      //     class: "abc",
+      //     onClick: () => alert(1),
+      //     a: 2,
+      //   },
+      //   [h("p", "hello"), h("p", '"我是谁？？？？",')]
+      // );
+      // let ele2 = h("h2", { style: { color: "green" } }, "我是第二个元素");
+      // render(ele1, app);
+      // setTimeout(() => {
+      //   render(ele2, app);
+      // }, 3000);
+      let ele1 = h("h1", { a: 1 }, "hello");
+      let ele2 = h('h1',{style: {color: "red"}},[h('a','1'),h('a','2')])
+
+      // let ele2 = h('div', h('h1'))
+      // let ele3 = h('h1', 'scsd')
+      // let ele4 = h('div', {b:4}, h('h1'),h("h2"),h("h3"))
+      // let ele5 = h('div', {style:{color: "red"}}, h('h1','a1'),h("h2",'b1'),h("h3",'c1'))
+      // console.log(ele1);
+      // console.log(ele2);
+      // console.log(ele3);
+      // console.log(ele4);
+      // console.log(ele5);
+      render(ele1, app)
+      setTimeout(() =>{
+        // let ele2 = h('div',{style: {color: "red"}}, "world")
+        render(ele2, app)
+      },1000)
+    </script>
+  </body>
+</html>

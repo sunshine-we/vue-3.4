@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- <div id="parentElement">
+      <span id="childElement">foo bar</span>
+    </div> -->
+    <div id="app"></div>
+    <script type="module">
+      import {
+        // createRenderer,
+        // render,
+        h,
+      } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import { renderOptions, render } from "../runtime-dom.js";
+      // console.log(createRenderer, "9999---", render);
+      // createRenderer  我们可以自己创建的渲染器
+      // render 系统默认提供的渲染器
+      // console.log(h);
+      // h 可以创建虚拟dom
+      let ele = h(
+        "h1",
+        {
+          style: { color: "red" },
+          class: "abc",
+          onClick: () => alert(1),
+          a: 2,
+        },
+        "我是谁？？？？"
+      );
+      // console.log(ele)
+      // render(ele, app)
+
+      // runtime-dom 他的作用就是提供DOM API （提供一些列dom操作的api方法）
+
+      // runtime-dom -> runtime-core(跨平台) -》 reactivity
+
+      // const renderer = createRenderer(renderOptions);
+      // renderer.render(ele, app);
+
+      render(ele, app);
+    </script>
+    <!-- <script>
+      // insertBefore 示例
+      const newNode = document.createElement("span");
+      newNode.innerText = "newNode";
+
+      const parenDin = document.getElementById("childElement").parentNode;
+
+      // test [1]
+      let sp2 = document.getElementById("childElement");
+      parenDin.insertBefore(newNode, sp2);
+      let sp3 = undefined;
+      const newNode3 = document.createElement("span");
+      // newNode3.innerText = 'newNode3'
+      parenDin.insertBefore(newNode3, sp3);
+      // Begin test case [ 3 ] : childElement is of Type "undefined" (string)
+      const newNode4 = document.createElement("span");
+      let sp4 = "undefined"; // Non-existent node of id "childElement"
+      parenDin.insertBefore(newNode4, sp4); // Generates "Type Error: Invalid Argument"
+      // End test case [ 3 ]
+    </script> -->
+  </body>
+</html>

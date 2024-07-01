@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>toRef</title>
+  </head>
+  <body>
+    <div id="app">1111</div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   reactive,
+      //   effect,
+      //   ref,
+      //   toRef,
+      // } from "/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js";
+      // 自己的
+      import {
+        reactive,
+        effect,
+        ref,
+        toRef,
+        toRefs,
+        proxyRefs,
+      } from "../reactivity.js";
+      let obj = { name: "jw", age: 30, flag: true };
+      const state = reactive(obj);
+      // // toRef
+      // const name = toRef(state, "name");
+      // const age = toRef(state, "age");
+      // console.log(name);
+      const { name, age } = toRefs(state);
+      console.log(name, name.value, age, age.value);
+
+      const proxy = proxyRefs({ ...toRefs(state) });
+      proxy.age = 100;
+      // effect(() => {
+      //   app.innerHTML = flag.value ? `姓名${state.name}` : `年龄${state.age}`;
+      // });
+      setTimeout(() => {
+        console.log(proxy.name, proxy.age);
+      }, 1000);
+    </script>
+  </body>
+</html>

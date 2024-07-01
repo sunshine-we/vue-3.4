@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- <div id="parentElement">
+      <span id="childElement">foo bar</span>
+    </div> -->
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,Text
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import { renderOptions, h, render, Text } from "../runtime-dom.js";
+      let ele1 = h(Text, 'hello');
+      // let ele2 = h('h1',{style: {color: "red"}},[h('a','1'),h('a','2')])
+
+      render(h(Text, 'hello'), app)
+      setTimeout(() =>{
+        // let ele2 = h('div',{style: {color: "red"}}, "world")
+        render(h(Text, 'world'), app)
+      },1000)
+      setTimeout(() =>{
+        // let ele2 = h('div',{style: {color: "red"}}, "world")
+        render(null, app)
+      },3000)
+    </script>
+  </body>
+</html>

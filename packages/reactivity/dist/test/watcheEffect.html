@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>watchedEffECT</title>
+  </head>
+  <body>
+    <div id="app">1111</div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   reactive,
+      //   effect,
+      //   ref,
+      //   toRef,
+      // } from "/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js";
+
+      // import {reactive, watch, watchEffect } from "/node_modules/vue/dist/vue.esm-browser.js";
+      // 自己的
+      import {
+        reactive,
+        effect,
+        ref,
+        toRef,
+        toRefs,
+        proxyRefs,
+        computed,
+        watch,watchEffect
+      } from "../reactivity.js";
+
+      let obj = { name: "jw", age: 30, flag: true };
+      const state = reactive(obj);
+      // const name = ref("123");
+      // watch(
+      //   ()=> state.name,
+      //   (newV, oldV) => {
+      //     console.log(newV, oldV, "999");
+      //   },
+      //   {
+      //     deep: true,
+      //     immediate: true
+      //   }
+      // );
+      // effect(() => {
+      //   app.innerHTML = `姓名${state.name}` + `年龄${state.age}`;
+      // });
+
+      watchEffect(()=>{
+        console.log(state.name+ state.age)
+      })
+      setTimeout(() => {
+        state.name = "你是猪吗";
+        // name.value = 'ref 的值改了'
+        console.log("state updated", state);
+        // console.log(proxy.name, proxy.age);
+      }, 3000);
+
+      // 组件最终会变成 effect
+    </script>
+  </body>
+</html>
