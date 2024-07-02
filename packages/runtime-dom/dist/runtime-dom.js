@@ -2,13 +2,18 @@
 function isObject(value) {
   return typeof value === "object" && value !== null;
 }
+function isFunction(value) {
+  return typeof value === "function";
+}
 function isString(value) {
   return typeof value === "string";
 }
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+var hasOwn = (val, key) => hasOwnProperty.call(val, key);
 
 // packages/runtime-core/src/createVnode.ts
 function createVnode(type, props, children) {
-  const shapeFlag = isString(type) ? 1 /* ELEMENT */ : 0;
+  const shapeFlag = isString(type) ? 1 /* ELEMENT */ : isObject(type) ? 4 /* STATEFUL_COMPONENT */ : 0;
   const vnode = {
     __v_isVnode: true,
     type,
@@ -96,6 +101,269 @@ function getSequence(arr) {
   return result;
 }
 
+// packages/reactivity/src/effect.ts
+var activeEffect;
+function cleanDepEffect(dep, effect) {
+  dep.delete(effect);
+  if (dep.size === 0) {
+    dep.cleanup();
+  }
+}
+function preCleanEffect(effect) {
+  effect._depsLength = 0;
+  effect._trackId++;
+}
+function postCleanEffect(effect) {
+  if (effect.deps.length > effect._depsLength) {
+    for (let i = effect._depsLength; i < effect.deps.length; i++) {
+      cleanDepEffect(effect.deps[i], effect);
+    }
+    effect.deps.length = effect._depsLength;
+  }
+}
+var ReactiveEffect = class {
+  // fn 用户编写的函数
+  // 如果fn中依赖的数据发生变化后，需要重新调用 -》 run()
+  constructor(fn, scheduler) {
+    this.fn = fn;
+    this.scheduler = scheduler;
+    this._trackId = 0;
+    // 用于记录当前effect执行了几次
+    this.deps = [];
+    this._depsLength = 0;
+    this._running = 0;
+    this._dirtyLevel = 4 /* Dirty */;
+    this.active = true;
+  }
+  get dirty() {
+    return this._dirtyLevel === 4 /* Dirty */;
+  }
+  set dirty(v) {
+    this._dirtyLevel = v ? 4 /* Dirty */ : 0 /* NoDirty */;
+  }
+  run() {
+    this._dirtyLevel = 0 /* NoDirty */;
+    if (!this.active) {
+      return this.fn();
+    }
+    let lastEffect = activeEffect;
+    try {
+      activeEffect = this;
+      preCleanEffect(this);
+      this._running++;
+      return this.fn();
+    } finally {
+      this._running--;
+      postCleanEffect(this);
+      activeEffect = lastEffect;
+    }
+  }
+  stop() {
+    if (this.active) {
+      this.active = false;
+      preCleanEffect(this);
+      postCleanEffect(this);
+    }
+  }
+};
+function trackEffect(effect, dep) {
+  if (dep.get(effect) !== effect._trackId) {
+    dep.set(effect, effect._trackId);
+    let oldDep = effect.deps[effect._depsLength];
+    if (oldDep !== dep) {
+      if (oldDep) {
+        cleanDepEffect(oldDep, effect);
+      }
+      effect.deps[effect._depsLength++] = dep;
+    } else {
+      effect._depsLength++;
+    }
+  }
+}
+function triggerEffect(deps) {
+  for (const effect of deps.keys()) {
+    if (effect._dirtyLevel < 4 /* Dirty */) {
+      effect._dirtyLevel = 4 /* Dirty */;
+    }
+    if (!effect._running) {
+      if (effect.scheduler) {
+        effect.scheduler();
+      }
+    }
+  }
+}
+
+// packages/reactivity/src/reactiveEffect.ts
+var targetMap = /* @__PURE__ */ new WeakMap();
+var createDep = (cleanup, key) => {
+  const dep = /* @__PURE__ */ new Map();
+  dep.cleanup = cleanup;
+  dep.name = key;
+  return dep;
+};
+function track(target, key, recevier) {
+  if (activeEffect) {
+    let depsMap = targetMap.get(target);
+    if (!depsMap) {
+      targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
+    }
+    let dep = depsMap.get(key);
+    if (!dep) {
+      depsMap.set(key, dep = createDep(() => depsMap.delete(key), key));
+    }
+    trackEffect(activeEffect, dep);
+  }
+}
+function trigger(target, key, oldValue, value) {
+  const depsMap = targetMap.get(target);
+  if (!depsMap) {
+    return;
+  }
+  let dep = depsMap.get(key);
+  if (dep) {
+    triggerEffect(dep);
+  }
+}
+
+// packages/reactivity/src/baseHandler.ts
+var mutableHandlers = {
+  get(target, key, recevier) {
+    if (key === "__v_isReactive" /* IS_REACTIVE */) {
+      return true;
+    }
+    track(target, key, recevier);
+    const res = Reflect.get(target, key, recevier);
+    if (isObject(res)) {
+      return reactive(res);
+    }
+    return res;
+  },
+  set(target, key, value, recevier) {
+    let oldValue = target[key];
+    let result = Reflect.set(target, key, value, recevier);
+    if (oldValue !== value) {
+      trigger(target, key, oldValue, value);
+    }
+    return result;
+  }
+};
+
+// packages/reactivity/src/reactive.ts
+var reactiveMap = /* @__PURE__ */ new WeakMap();
+function reactive(target) {
+  return createReactiveObject(target);
+}
+function createReactiveObject(target) {
+  if (!isObject(target)) {
+    return target;
+  }
+  if (target["__v_isReactive" /* IS_REACTIVE */]) {
+    return target;
+  }
+  const exitsProxy = reactiveMap.get(target);
+  if (exitsProxy) return exitsProxy;
+  let proxy = new Proxy(target, mutableHandlers);
+  reactiveMap.set(target, proxy);
+  return proxy;
+}
+
+// packages/runtime-core/src/scheduler.ts
+var queue = [];
+var isFlushing = false;
+var resolvePromise = Promise.resolve();
+function queueJob(job) {
+  debugger;
+  if (!queue.includes(job)) {
+    queue.push(job);
+  }
+  if (!isFlushing) {
+    isFlushing = true;
+    resolvePromise.then(() => {
+      isFlushing = false;
+      const copy = queue.slice(0);
+      queue.length = 0;
+      copy.forEach((job2) => job2());
+      copy.length = 0;
+    });
+  }
+}
+
+// packages/runtime-core/src/component.ts
+function createComponentInstance(vnode) {
+  const instance = {
+    data: null,
+    // 组件的状态
+    vnode,
+    // 组件的虚拟节点
+    subTree: null,
+    // 子树
+    isMounted: null,
+    // 是否挂载完成
+    update: null,
+    // 组件的更新函数
+    props: {},
+    attrs: {},
+    propsOptions: vnode.type.props,
+    // 用户声明的那些属性是组件的属性
+    component: null,
+    proxy: null
+    // 用来代理 props attrs, data 让用户更方便的使用
+  };
+  return instance;
+}
+var publicProperty = {
+  $attrs: (instance) => instance.attrs
+};
+var handle = {
+  get(target, key) {
+    const { state, props, attrs } = target;
+    if (state && hasOwn(state, key)) {
+      return state[key];
+    } else if (props && hasOwn(props, key)) {
+      return props[key];
+    }
+    const getter = publicProperty[key];
+    if (getter) {
+      return getter(target);
+    }
+  },
+  set(target, key, value) {
+    const { state, props, attrs } = target;
+    if (state && hasOwn(state, key)) {
+      return state[key] = value;
+    } else if (props && hasOwn(props, key)) {
+      console.warn("props are readonly");
+      return false;
+    }
+  }
+};
+function setupComponent(instance) {
+  const { vnode } = instance;
+  initPorps(instance, vnode.props);
+  instance.proxy = new Proxy(instance, handle);
+  const { data, render: render2 } = vnode.type;
+  if (!isFunction(data)) return console.warn("data option must be a function");
+  instance.data = reactive(data.call(instance.proxy, instance.proxy));
+  instance.render = render2;
+}
+var initPorps = (instance, rawProps) => {
+  const props = {};
+  const attrs = {};
+  const propsOptions = instance.propsOptions || {};
+  if (rawProps) {
+    for (let key in rawProps) {
+      const value = rawProps[key];
+      if (key in propsOptions) {
+        props[key] = value;
+      } else {
+        attrs[key] = value;
+      }
+    }
+  }
+  instance.attrs = attrs;
+  instance.props = reactive(props);
+};
+
 // packages/runtime-core/src/renderer.ts
 function createRenderer(renderOptions2) {
   const {
@@ -110,7 +378,6 @@ function createRenderer(renderOptions2) {
     patchProp: hostPatchProp
   } = renderOptions2;
   const mountElement = (vnode, container, anchor) => {
-    console.log(vnode);
     const { type, children, props, shapeFlag } = vnode;
     let el = vnode.el = hostCreateElement(type);
     if (props) {
@@ -260,6 +527,32 @@ function createRenderer(renderOptions2) {
     patchProps(oldProps, newProps, el);
     patchChildren(n1, n2, el);
   };
+  const setupRenderEffect = (instance, container, anchor) => {
+    const { render: render3 } = instance;
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        const subTree = render3.call(instance.proxy, instance.proxy);
+        patch(null, subTree, container, anchor);
+        instance.subTree = subTree;
+        instance.isMounted = true;
+      } else {
+        const subTree = render3.call(instance.proxy, instance.proxy);
+        patch(instance.subTree, subTree, container, anchor);
+        instance.subTree = subTree;
+      }
+    };
+    const effect = new ReactiveEffect(
+      componentUpdateFn,
+      () => queueJob(update)
+    );
+    const update = instance.update = () => effect.run();
+    update();
+  };
+  const mountComponent = (vnode, container, anchor) => {
+    const instance = vnode.component = createComponentInstance(vnode);
+    setupComponent(instance);
+    setupRenderEffect(instance, container, anchor);
+  };
   const processText = (n1, n2, container) => {
     if (n1 === null) {
       hostInsert(n2.el = hostCreateText(n2.children), container);
@@ -284,6 +577,12 @@ function createRenderer(renderOptions2) {
       patchElement(n1, n2, container);
     }
   };
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      mountComponent(n2, container, anchor);
+    } else {
+    }
+  };
   const patch = (n1, n2, container, anchor = null) => {
     if (n1 === n2) {
       return;
@@ -292,25 +591,26 @@ function createRenderer(renderOptions2) {
       unmount(n1);
       n1 = null;
     }
-    const { type } = n2;
+    const { type, shapeFlag } = n2;
     switch (type) {
       case Text:
         processText(n1, n2, container);
         break;
       case Fragment:
-        console.log(type);
         processFragment(n1, n2, container);
         break;
       default:
-        processElement(n1, n2, container, anchor);
+        if (shapeFlag & 1 /* ELEMENT */) {
+          processElement(n1, n2, container, anchor);
+        } else if (shapeFlag & 6 /* COMPONENT */) {
+          processComponent(n1, n2, container, anchor);
+        }
     }
   };
   const unmount = (vnode) => hostRemove(vnode.el);
   const render2 = (vnode, container) => {
-    console.log(vnode, container, "render");
     if (vnode === null) {
       if (container._vnode) {
-        console.log(container._vnode);
         unmount(container._vnode);
       }
     } else {

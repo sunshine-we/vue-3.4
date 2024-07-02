@@ -1,6 +1,9 @@
-import { ShapeFlags } from "@vue/shared";
+import { ShapeFlags, hasOwn } from "@vue/shared";
 import { Fragment, Text, isSameVnode } from "./createVnode";
 import getSequence from "./seq";
+import { ReactiveEffect, reactive } from "@vue/reactivity";
+import { queueJob } from "./scheduler";
+import { createComponentInstance, setupComponent } from "./component";
 
 export function createRenderer(renderOptions) {
   const {
@@ -15,7 +18,7 @@ export function createRenderer(renderOptions) {
     patchProp: hostPatchProp,
   } = renderOptions;
   const mountElement = (vnode, container, anchor) => {
-    console.log(vnode);
+    // console.log(vnode);
     const { type, children, props, shapeFlag } = vnode;
 
     let el = (vnode.el = hostCreateElement(type));
@@ -327,7 +330,38 @@ export function createRenderer(renderOptions) {
     patchProps(oldProps, newProps, el);
     patchChildren(n1, n2, el);
   };
+  const setupRenderEffect = (instance, container, anchor) => {
+    const { render } = instance;
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        // 第一次挂载
+        const subTree = render.call(instance.proxy, instance.proxy);
+        patch(null, subTree, container, anchor);
+        instance.subTree = subTree;
+        instance.isMounted = true;
+      } else {
+        const subTree = render.call(instance.proxy, instance.proxy);
+        patch(instance.subTree, subTree, container, anchor);
+        instance.subTree = subTree;
+      }
+    };
+    const effect = new ReactiveEffect(componentUpdateFn, () =>
+      queueJob(update)
+    );
+    const update = (instance.update = () => effect.run());
+    update();
+  };
+  const mountComponent = (vnode, container, anchor) => {
+    // 1 先创建组件实例
+    const instance = (vnode.component = createComponentInstance(vnode));
 
+    // 2 给实例的属性复制
+    setupComponent(instance);
+
+    // 3 创建一个effect
+    setupRenderEffect(instance, container, anchor);
+    // console.log(instance);
+  };
   const processText = (n1, n2, container) => {
     if (n1 === null) {
       // 1 虚拟节点要关联真实节点
@@ -355,6 +389,13 @@ export function createRenderer(renderOptions) {
       patchElement(n1, n2, container);
     }
   };
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      mountComponent(n2, container, anchor);
+    } else {
+      // patchComponent(n1,n2,container)
+    }
+  };
   // 渲染走这里，更新也走这里
   const patch = (n1, n2, container, anchor = null) => {
     if (n1 === n2) {
@@ -364,27 +405,32 @@ export function createRenderer(renderOptions) {
       unmount(n1);
       n1 = null;
     }
-    const { type } = n2;
+    const { type, shapeFlag } = n2;
     switch (type) {
       case Text:
         processText(n1, n2, container);
         break;
       case Fragment:
-        console.log(type);
+        // console.log(type);
         processFragment(n1, n2, container);
         break;
       default:
-        processElement(n1, n2, container, anchor);
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          processElement(n1, n2, container, anchor);
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          // vue3中，赢废弃了函数式组件
+          processComponent(n1, n2, container, anchor);
+        }
     }
   };
   const unmount = (vnode) => hostRemove(vnode.el);
   const render = (vnode, container) => {
     // 将虚拟节点变成真实节点渲染
-    console.log(vnode, container, "render");
+    // console.log(vnode, container, "render");
     if (vnode === null) {
       // 要移除
       if (container._vnode) {
-        console.log(container._vnode);
+        // console.log(container._vnode);
         unmount(container._vnode);
       }
     } else {

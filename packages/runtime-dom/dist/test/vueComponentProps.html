@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vueComponentProps.html</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+      } from "../runtime-dom.js";
+      // let ele1 = h(Text, "hello");
+      // let ele2 = h('h1',{style: {color: "red"}},[h('a','1'),h('a','2')])
+
+      // render(h(Text, "hello"), app);
+      // render(h(Fragment, [h("div", "fragment"), h("a", "hello")]), app);
+      const VueComponent = {
+        data() {
+          return { name: "jw", age: 30 };
+        },
+        props:{
+          name: String, 
+          age: Number
+        },
+        render(proxy) {
+          console.log(proxy);
+          // setTimeout(() => {
+          //   this.age++;
+          //   this.age++;
+          // }, 3000);
+          return h("div", [
+            h(Text, "my name is " + proxy.name),
+            h("a", "my age is " + proxy.age),
+            h("a", "my aa is " + proxy.$attrs.a),
+          ]);
+        },
+      };
+      // 组件有两个虚拟机诶到哪组中，h(VueComponent ) 产生的是组件内的虚拟节点
+      // render 函数返回的虚拟节点， 这个虚拟节点才是最重要渲染的内容 = subTree
+      render(h(VueComponent, { a: 111111, b: 222222, name: "组件", age: 20 }), app);
+    </script>
+  </body>
+</html>

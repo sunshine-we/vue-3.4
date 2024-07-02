@@ -1,7 +1,11 @@
-import { ShapeFlags, isString } from "@vue/shared";
+import { ShapeFlags, isObject, isString } from "@vue/shared";
 
 export function createVnode(type, props?, children?) {
-  const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
+  const shapeFlag = isString(type)
+    ? ShapeFlags.ELEMENT  // 元素
+    : isObject(type)
+    ? ShapeFlags.STATEFUL_COMPONENT  // 组件
+    : 0;
   const vnode = {
     __v_isVnode: true,
     type,
