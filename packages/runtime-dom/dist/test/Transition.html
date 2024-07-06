@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transition.html.html</title>
+    <style>
+      .v-enter-active,
+      .v-leave-active {
+        transition: opacity 2s ease;
+      }
+
+      .v-enter-from,
+      .v-leave-to {
+        opacity: 0;
+      }
+      .x-enter-active,
+      .x-leave-active {
+        transition: opacity 2s ease;
+      }
+
+      .x-enter-from,
+      .x-leave-to {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   ref,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      //   provide,
+      //   inject,
+      //   Teleport,
+      //   Transition,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+        ref,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance,
+        provide,
+        inject,
+        Teleport,
+        Transition,
+      } from "../runtime-dom.js";
+
+      // function Transition(props, { slots }) {
+      //   console.log(props, slots);
+      // }
+      const props = {
+        name:'x',
+        onBeforeEnter(el) {
+          console.log(el, "beforeEnter");
+        },
+        onEnter(el) {
+          console.log(el, "enter");
+        },
+        onLeave(el, done) {
+          // done();
+          console.log(el, "leave");
+        },
+      };
+      render(
+        h(Transition, props, {
+          a: 1, // 标识符，仅供测试
+          default: () => {
+            return h(
+              "div",
+              {
+                style: { width: "100px", height: "100px", background: "red" },
+              },
+              "haha"
+            );
+          },
+        }),
+        app
+      );
+      // 组件更新
+      setTimeout(() => {
+        render(
+          h(Transition, props, {
+            b: 2, // 标识符，仅供测试
+            default: () => {
+              return h(
+                "p",
+                {
+                  style: {
+                    width: "100px",
+                    height: "100px",
+                    background: "blue",
+                  },
+                },
+                "world"
+              );
+            },
+          }),
+          app
+        );
+      }, 2000);
+      setTimeout(() => {
+        render(
+          h(Transition, props, {
+            c: 3, // 标识符，仅供测试
+            default: () => {
+              return h(
+                "div",
+                {
+                  style: {
+                    width: "100px",
+                    height: "100px",
+                    background: "green",
+                  },
+                },
+                "haha"
+              );
+            },
+          }),
+          app
+        );
+      }, 4000);
+      // setTimeout(() => {
+      //   render(null, app);
+      // }, 11000);
+
+      // ------------------------------------- 分割线 -------------------------------------
+      // const renderComponent = {
+      //   props: {
+      //     address: String,
+      //   },
+      //   render() {
+      //     return h(Text, this.address);
+      //   },
+      // };
+      // const VueComponent = {
+      //   data() {
+      //     return { flag: true, address: "北京" };
+      //   },
+      //   render(proxy) {
+      //     console.log(proxy);
+      //     // setTimeout(() => {
+      //     //   this.age++;
+      //     //   this.age++;
+      //     // }, 3000);
+      //     return h(Fragment, null, [
+      //       h(
+      //         "button",
+      //         {
+      //           onClick: () => {
+      //             debugger;
+      //             this.flag = !this.flag;
+      //           },
+      //         },
+      //         "点击我 "
+      //       ),
+      //       h(
+      //         renderComponent,
+      //         { address: this.flag ? "北京" : "上海" },
+      //         " --站位"
+      //       ),
+      //     ]);
+      //   },
+      // };
+      // 组件有两个虚拟机诶到哪组中，h(VueComponent ) 产生的是组件内的虚拟节点
+      // render 函数返回的虚拟节点， 这个虚拟节点才是最重要渲染的内容 = subTree
+      // render(h(VueComponent, {}), app);
+    </script>
+  </body>
+</html>

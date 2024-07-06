@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>asyncComponent.html.html</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   ref,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      //   provide,
+      //   inject,
+      //   Teleport,
+      //   Transition,
+      //   KeepAlive,
+      //   defineAsyncComponent,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+        ref,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance,
+        provide,
+        inject,
+        Teleport,
+        Transition,
+        KeepAlive,
+        defineAsyncComponent,
+      } from "../runtime-dom.js";
+
+      const comp = import("/packages/runtime-dom/dist/test/asyncComponent.js");
+      console.log(comp);
+      // demo 1 简单的示例
+      // const myComp = defineAsyncComponent(() => {
+      //   // return comp;
+      //   return new Promise((resolve, reject)=> {
+      //     setTimeout(() => {
+      //       resolve({
+      //         render: () => {
+      //           return h('h1', 'world')
+      //         }
+      //       })
+      //     },2000)
+      //   })
+      // });
+      // render(h(myComp), app);
+
+      // demo 2 加入 errorComponent loadingComponent onError(尝试重新加载)
+      let index = 2;
+      let i = 0;
+      const myComp = defineAsyncComponent({
+        loader: () => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (i++ === 2) {
+                resolve({
+                  render: () => {
+                    return h("h1", "world");
+                  },
+                });
+              } else {
+                reject({
+                  render: () => {
+                    return h("div", "组件加载错误了");
+                  },
+                });
+              }
+            }, 3000);
+          });
+        },
+        timeout: 1000,
+        errorComponent: {
+          render: () => {
+            return h("div", "error ~~~");
+          },
+        },
+        delay: 500, // 500ms 内如果组件没有加载出来，显示loading
+        loadingComponent: {
+          render: () => {
+            return h("div", "loader ........");
+          },
+        },
+        onError(err, retry, idx, i) {
+          console.log(err, retry, idx, i);
+          setTimeout(() => {
+            retry();
+            console.log("尝试重新加载");
+          }, 1000);
+        },
+      });
+      render(h(myComp), app);
+    </script>
+  </body>
+</html>

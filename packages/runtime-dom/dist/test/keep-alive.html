@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>keep-alive.html</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   ref,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      //   provide,
+      //   inject,
+      //   Teleport,
+      //   Transition,
+      //   KeepAlive,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+        ref,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance,
+        provide,
+        inject,
+        Teleport,
+        Transition,KeepAlive
+      } from "../runtime-dom.js";
+      // 缓存的是dom keep alive 缓存后不会重新渲染，而是服用原来的dom元素
+      // 1 组件不会被重新创建，会将上次的结果拿出来返回
+      // 2 组件不会被卸载，而是将dom移除
+      // 3 内部需要缓存 dom
+
+      const keepAliveProps = {
+        max: 1
+      }
+      const A1 = {
+        a: '1',
+        setup() {
+          onMounted(() => {
+            console.log("a1 mounted");
+          });
+          return () => {
+            return h("h1", "a1");
+          };
+        },
+      };
+      const A2 = {
+        a: '2',
+        setup() {
+          onMounted(() => {
+            console.log("a2 mounted");
+          });
+          return () => {
+            return h("h2", "a2");
+          };
+        },
+      };
+      const A3 = {
+        a: '3',
+        setup() {
+          onMounted(() => {
+            console.log("a3 mounted");
+          });
+          return () => {
+            return h("h3", "a3");
+          };
+        },
+      };
+      render(
+        h(KeepAlive, keepAliveProps, {
+          default: () => h(A1,{key: 'a1'}),
+        }),
+        app
+      );
+      setTimeout(() => {
+        render(
+          h(KeepAlive, keepAliveProps, {
+            default: () => h(A2,{key: 'a2'}),
+          }),
+          app
+        );
+      }, 2000);
+      setTimeout(() => {
+        render(
+          h(KeepAlive, keepAliveProps, {
+            default: () => h(A1,{key: 'a1'}),
+          }),
+          app
+        );
+      }, 4000);
+      setTimeout(() => {
+        render(
+          h(KeepAlive, keepAliveProps, {
+            default: () => h(A3,{key: 'a3'}),
+          }),
+          app
+        );
+      }, 5000);
+      setTimeout(() => {
+        render(
+          h(KeepAlive, keepAliveProps, {
+            default: () => h(A2,{key: 'a2'}),
+          }),
+          app
+        );
+      }, 6000);
+      setTimeout(() => {
+        render(
+          h(KeepAlive, keepAliveProps, {
+            default: () => h(A1,{key: 'a1'}),
+          }),
+          app
+        );
+      }, 7000);
+      // ------------------------------------- 分割线 -------------------------------------
+      // const renderComponent = {
+      //   props: {
+      //     address: String,
+      //   },
+      //   render() {
+      //     return h(Text, this.address);
+      //   },
+      // };
+      // const VueComponent = {
+      //   data() {
+      //     return { flag: true, address: "北京" };
+      //   },
+      //   render(proxy) {
+      //     console.log(proxy);
+      //     // setTimeout(() => {
+      //     //   this.age++;
+      //     //   this.age++;
+      //     // }, 3000);
+      //     return h(Fragment, null, [
+      //       h(
+      //         "button",
+      //         {
+      //           onClick: () => {
+      //             debugger;
+      //             this.flag = !this.flag;
+      //           },
+      //         },
+      //         "点击我 "
+      //       ),
+      //       h(
+      //         renderComponent,
+      //         { address: this.flag ? "北京" : "上海" },
+      //         " --站位"
+      //       ),
+      //     ]);
+      //   },
+      // };
+      // 组件有两个虚拟机诶到哪组中，h(VueComponent ) 产生的是组件内的虚拟节点
+      // render 函数返回的虚拟节点， 这个虚拟节点才是最重要渲染的内容 = subTree
+      // render(h(VueComponent, {}), app);
+    </script>
+  </body>
+</html>

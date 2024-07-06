@@ -1,23 +1,19 @@
-
 const queue = []; // 缓存队列
 let isFlushing = false;
 const resolvePromise = Promise.resolve();
 
-
 export function queueJob(job) {
-  debugger
   if (!queue.includes(job)) {
-    queue.push(job)
+    queue.push(job);
   }
   if (!isFlushing) {
-    isFlushing = true
+    isFlushing = true;
     resolvePromise.then(() => {
-      isFlushing = false
-      const copy = queue.slice(0)
+      isFlushing = false;
+      const copy = queue.slice(0);
       queue.length = 0;
-      copy.forEach(job => job())
-      copy.length = 0
-    })
+      copy.forEach((job) => job());
+      copy.length = 0;
+    });
   }
-
 }

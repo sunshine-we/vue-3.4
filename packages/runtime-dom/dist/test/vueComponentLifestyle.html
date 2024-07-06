@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vueComponentLifestyle.html.html</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   ref,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+        ref,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance,
+      } from "../runtime-dom.js";
+
+      const My = {
+        props: {
+          value: String,
+        },
+        setup(porps, { emit }) {
+          console.log(" My  +++ setup");
+          console.log(getCurrentInstance(), "My  +++  instance");
+          // instance -- 钩子关联在一起，在特定的时机调用对应的钩子函数
+          onBeforeMount(() => {
+            console.log("My  +++onBeforeMount ..... 1");
+            console.log(getCurrentInstance(), "My  +++  onBeforeMount instance");
+          }),
+            onMounted(() => {
+              console.log("My  +++onMounted ...2");
+            });
+          onBeforeUpdate(() => {
+            console.log("My  +++onBeforeUpdate .... 3");
+          });
+          onUpdated(() => {
+            console.log("My  +++onUpdated..... 4");
+          });
+          const val = ref("a");
+          setTimeout(() => {
+            val.value = "my";
+          }, 2500);
+          return (proxy) => {
+            return h(
+              "button",
+              { onClick: () => emit("myEvent", val.value) },
+              val.value
+            );
+          };
+        },
+      };
+      const VueComponent = {
+        setup(porps, { emit }) {
+          console.log("sVueComponent &&&& etup");
+          console.log(getCurrentInstance(), "sVueComponent  +++  instance");
+
+          // instance -- 钩子关联在一起，在特定的时机调用对应的钩子函数
+          onBeforeMount(() => {
+            console.log("sVueComponent &&&& onBeforeMount ..... 1");
+          }),
+            onMounted(() => {
+              console.log("sVueComponent &&&& onMounted ...2");
+            });
+          onBeforeUpdate(() => {
+            console.log("sVueComponent &&&& onBeforeUpdate .... 3");
+          });
+          onUpdated(() => {
+            console.log("sVueComponent &&&& onUpdated..... 4");
+          });
+          const val = ref("初始值");
+          setTimeout(() => {
+            val.value = "更变了";
+          }, 3000);
+          return (proxy) => {
+            return h(
+              My,
+              { onClick: () => emit("myEvent", val.value), value: val.value },
+              val.value
+            );
+          };
+        },
+      };
+
+      render(h(VueComponent, { onMyEvent: (v) => alert(v) }), app);
+      // 组件卸载
+      setTimeout(() => {
+        // render(h(null), app);
+      }, 3000);
+
+      // ------------------------------------- 分割线 -------------------------------------
+      // const renderComponent = {
+      //   props: {
+      //     address: String,
+      //   },
+      //   render() {
+      //     return h(Text, this.address);
+      //   },
+      // };
+      // const VueComponent = {
+      //   data() {
+      //     return { flag: true, address: "北京" };
+      //   },
+      //   render(proxy) {
+      //     console.log(proxy);
+      //     // setTimeout(() => {
+      //     //   this.age++;
+      //     //   this.age++;
+      //     // }, 3000);
+      //     return h(Fragment, null, [
+      //       h(
+      //         "button",
+      //         {
+      //           onClick: () => {
+      //             debugger;
+      //             this.flag = !this.flag;
+      //           },
+      //         },
+      //         "点击我 "
+      //       ),
+      //       h(
+      //         renderComponent,
+      //         { address: this.flag ? "北京" : "上海" },
+      //         " --站位"
+      //       ),
+      //     ]);
+      //   },
+      // };
+      // 组件有两个虚拟机诶到哪组中，h(VueComponent ) 产生的是组件内的虚拟节点
+      // render 函数返回的虚拟节点， 这个虚拟节点才是最重要渲染的内容 = subTree
+      // render(h(VueComponent, {}), app);
+    </script>
+  </body>
+</html>

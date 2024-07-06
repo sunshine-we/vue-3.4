@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>functionComponent.html</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   ref,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+        ref,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance,
+      } from "../runtime-dom.js";
+
+      function fnComp(props) {
+        return h("div", props.a + props.b);
+      }
+      render(h(fnComp, { a: 1, b: 2 }), app);
+
+      // ------------------------------------------- 分割线 -----------------------------
+
+      // const My = {
+      //   props: {
+      //     a: Number,
+      //   },
+      //   setup(porps, { emit }) {
+      //     // expose({
+      //     //   a: 200,
+      //     // });
+      //     return (proxy) => {
+      //       return h("button", "点击我");
+      //     };
+      //   },
+      // };
+      // const VueComponent = {
+      //   setup(porps, { emit }) {
+      //     const comp = ref(null);
+      //     onMounted(() => {
+      //       console.log(comp.value.a);
+      //     });
+      //     return (proxy) => {
+      //       return h(My, {
+      //         ref: comp,
+      //         a: 100,
+      //       });
+      //     };
+      //   },
+      // };
+
+      // render(h(VueComponent, { onMyEvent: (v) => alert(v) }), app);
+      // // 组件卸载
+      // setTimeout(() => {
+      //   // render(h(null), app);
+      // }, 3000);
+
+      // ------------------------------------- 分割线 -------------------------------------
+      // const renderComponent = {
+      //   props: {
+      //     address: String,
+      //   },
+      //   render() {
+      //     return h(Text, this.address);
+      //   },
+      // };
+      // const VueComponent = {
+      //   data() {
+      //     return { flag: true, address: "北京" };
+      //   },
+      //   render(proxy) {
+      //     console.log(proxy);
+      //     // setTimeout(() => {
+      //     //   this.age++;
+      //     //   this.age++;
+      //     // }, 3000);
+      //     return h(Fragment, null, [
+      //       h(
+      //         "button",
+      //         {
+      //           onClick: () => {
+      //             debugger;
+      //             this.flag = !this.flag;
+      //           },
+      //         },
+      //         "点击我 "
+      //       ),
+      //       h(
+      //         renderComponent,
+      //         { address: this.flag ? "北京" : "上海" },
+      //         " --站位"
+      //       ),
+      //     ]);
+      //   },
+      // };
+      // 组件有两个虚拟机诶到哪组中，h(VueComponent ) 产生的是组件内的虚拟节点
+      // render 函数返回的虚拟节点， 这个虚拟节点才是最重要渲染的内容 = subTree
+      // render(h(VueComponent, {}), app);
+    </script>
+  </body>
+</html>

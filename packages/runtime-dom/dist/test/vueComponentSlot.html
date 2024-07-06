@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vueComponentSetup.html</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   ref,
+      // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+      import {
+        renderOptions,
+        h,
+        render,
+        Text,
+        Fragment,
+        ref,
+      } from "../runtime-dom.js";
+      const renderComponent = {
+        render(proxy) {
+          console.log(proxy)
+          return h(Fragment, [proxy.$slots.header('aaaaa'),proxy.$slots.footer('bbbb')]);
+        },
+      };
+      const VueComponent = {
+        setup(props, { emit, attrs, expose, slots }) {
+          // console.log(props);
+          // console.log(attrs)
+          // console.log(emit)
+          // console.log(expose)
+          // console.log(slots)
+          const a = ref(1);
+
+          setTimeout(() => {
+            a.value++;
+          }, 1000);
+          return () => {
+            return h(renderComponent, { style: { color: "red" } }, {
+              header: (t) => h('header', 'header'+t),
+              footer: (t) => h('footer', 'footer'+t)
+            });
+          };
+        },
+        render(proxy) {
+          return h("div", proxy.a);
+        },
+      };
+
+      render(h(VueComponent, {}), app);
+
+      // ------------------------------------- 分割线 -------------------------------------
+      // const renderComponent = {
+      //   props: {
+      //     address: String,
+      //   },
+      //   render() {
+      //     return h(Text, this.address);
+      //   },
+      // };
+      // const VueComponent = {
+      //   data() {
+      //     return { flag: true, address: "北京" };
+      //   },
+      //   render(proxy) {
+      //     console.log(proxy);
+      //     // setTimeout(() => {
+      //     //   this.age++;
+      //     //   this.age++;
+      //     // }, 3000);
+      //     return h(Fragment, null, [
+      //       h(
+      //         "button",
+      //         {
+      //           onClick: () => {
+      //             debugger;
+      //             this.flag = !this.flag;
+      //           },
+      //         },
+      //         "点击我 "
+      //       ),
+      //       h(
+      //         renderComponent,
+      //         { address: this.flag ? "北京" : "上海" },
+      //         " --站位"
+      //       ),
+      //     ]);
+      //   },
+      // };
+      // 组件有两个虚拟机诶到哪组中，h(VueComponent ) 产生的是组件内的虚拟节点
+      // render 函数返回的虚拟节点， 这个虚拟节点才是最重要渲染的内容 = subTree
+      // render(h(VueComponent, {}), app);
+    </script>
+  </body>
+</html>
