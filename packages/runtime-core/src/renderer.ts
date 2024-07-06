@@ -1,4 +1,4 @@
-import { ShapeFlags, hasOwn } from "@vue/shared";
+import { PatchFlags, ShapeFlags, hasOwn } from "@vue/shared";
 import { Fragment, Text, createVnode, isSameVnode } from "./createVnode";
 import getSequence from "./seq";
 import { ReactiveEffect, isRef, reactive } from "@vue/reactivity";
@@ -344,15 +344,55 @@ export function createRenderer(renderOptions) {
       }
     }
   };
+
+  const patchBlockChildren = (n1, n2, el, anchor, parentComponent) => {
+    for (let i = 0; i < n2.length; i++) {
+      patchElement(
+        n1.dynamicChildren[i],
+        n2.dynamicChildren[i],
+        el,
+        anchor,
+        parentComponent
+      );
+    }
+  };
   const patchElement = (n1, n2, container, anchor, parentComponent) => {
     // 1 比较元素的差异， 肯定要复用dom元素
     // 2 比较属性和元素的子节点
     let el = (n2.el = n1.el);
     let oldProps = n1.props || {};
     let newProps = n2.props || {};
+
+    // 靶向更新逻辑开始
+    const { patchFlag, dynamicChildren } = n2;
+    if (patchFlag) {
+      if (patchFlag & PatchFlags.TEXT) {
+        if (n1.children !== n2.children) {
+          hostSetElementText(el, n2.children);
+        }
+        if (patchFlag & PatchFlags.CLASS) {
+          // todo
+          if (oldProps.class !== newProps.class) {
+            hostPatchProp(el, "class", null, newProps.class);
+          }
+        }
+        if (patchFlag & PatchFlags.STYLE) {
+          //to do
+          hostPatchProp(el, "style", oldProps.style, newProps.style);
+        }
+      }
+    } else {
+      patchProps(oldProps, newProps, el);
+    }
+    if (dynamicChildren) {
+      patchBlockChildren(n1, n2, el, anchor, parentComponent);
+    } else {
+      // 全量diff
+      patchChildren(n1, n2, el, anchor, parentComponent);
+    }
+    // 靶向更新逻辑结束
+
     // hostPatchProp 只针对一个属性进行处理
-    patchProps(oldProps, newProps, el);
-    patchChildren(n1, n2, el, anchor, parentComponent);
   };
   const updateComponentPreRender = (instance, next) => {
     instance.next = null;
