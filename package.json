@@ -8,6 +8,7 @@
   "scripts": {
     "dev:r": "node scripts/dev.js reactivity -f esm",
     "dev:dom": "node scripts/dev.js runtime-dom -f esm",
+    "dev:compiler": "node scripts/dev.js compiler-core -f esm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
